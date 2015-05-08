@@ -685,6 +685,112 @@ template MAPNIK_DECL void set_alpha(image_gray64f &, float);
 
 namespace detail {
 
+template <typename T>
+struct visitor_rescale
+{
+    visitor_rescale(T & dest_img, scaling_method_e scaling_method,
+                    box2d<double> const& src_bounds, projection const& src_proj,
+                    box2d<double> const& dest_bounds, projection const& dest_proj)
+        : dest_img_(dest_img), scaling_method_(scaling_method),
+          src_bounds_(src_bounds), src_proj_(src_proj),
+          dest_bounds_(dest_bounds), dest_proj_(dest_proj) {}
+
+    void operator() (image_null const&)
+    {
+        throw std::runtime_error("Error: cannot rescale a null image");
+    }
+
+    template <typename T2>
+    void operator() (T2 const& data)
+    {
+        if (src_bounds_ == dest_bounds_ && src_proj_ == dest_proj_) {
+            /**
+             * noop as nothing to rescale
+             */
+        } else if (src_proj_ == dest_proj_) {
+            /**
+             * projections are the same just clip image
+             */
+            throw std::runtime_error("Error: rescale with " + std::string(typeid(data).name()) + " is not supported");
+        } else {
+            /**
+             * projections aren't the same clip and scale
+             */
+            throw std::runtime_error("Error: rescale with " + std::string(typeid(data).name()) + " is not supported");
+        }
+    }
+
+  private:
+    T & dest_img_;
+    scaling_method_e scaling_method_;
+    box2d<double> const& src_bounds_;
+    projection const& src_proj_;
+    box2d<double> const& dest_bounds_;
+    projection const& dest_proj_;
+
+};
+
+} // end detail ns
+
+// RESCALE
+MAPNIK_DECL void rescale (image_any const& src_img, image_any & dest_img,
+                          scaling_method_e scaling_method,
+                          box2d<double> const& src_bounds, projection const& src_proj,
+                          box2d<double> const& dest_bounds, projection const& dest_proj)
+{
+    return util::apply_visitor(
+        detail::visitor_rescale<image_any>(dest_img, scaling_method,
+                                           src_bounds, src_proj,
+                                           dest_bounds, dest_proj), src_img);
+}
+
+template <typename T>
+MAPNIK_DECL void rescale (T const& src_img, T & dest_img, scaling_method_e scaling_method,
+                          box2d<double> const& src_bounds, projection const& src_proj,
+                          box2d<double> const& dest_bounds, projection const& dest_proj)
+{
+    detail::visitor_rescale<T> visit(dest_img, scaling_method,
+                                     src_bounds, src_proj,
+                                     dest_bounds, dest_proj);
+    return visit(src_img);
+}
+
+template MAPNIK_DECL void rescale(image_rgba8 const&, image_rgba8 &, scaling_method_e,
+                                         box2d<double> const&, projection const&,
+                                         box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray8 const&, image_gray8 &, scaling_method_e,
+                                         box2d<double> const&, projection const&,
+                                         box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray8s const&, image_gray8s &,scaling_method_e,
+                                          box2d<double> const&, projection const&,
+                                          box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray16 const&, image_gray16 &, scaling_method_e,
+                                          box2d<double> const&, projection const&,
+                                          box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray16s const&, image_gray16s &, scaling_method_e,
+                                           box2d<double> const&, projection const&,
+                                           box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray32 const&, image_gray32 &, scaling_method_e,
+                                          box2d<double> const&, projection const&,
+                                          box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray32s const&, image_gray32s &, scaling_method_e,
+                                           box2d<double> const&, projection const&,
+                                           box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray32f const&, image_gray32f &, scaling_method_e,
+                                           box2d<double> const&, projection const&,
+                                           box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray64 const&, image_gray64 &, scaling_method_e,
+                                          box2d<double> const&, projection const&,
+                                          box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray64s const&, image_gray64s &, scaling_method_e,
+                                           box2d<double> const&, projection const&,
+                                           box2d<double> const&, projection const&);
+template MAPNIK_DECL void rescale(image_gray64f const&, image_gray64f &, scaling_method_e,
+                                           box2d<double> const&, projection const&,
+                                           box2d<double> const&, projection const&);
+
+namespace detail {
+
 struct visitor_set_grayscale_to_alpha
 {
     void operator() (image_rgba8 & data)

@@ -24,8 +24,11 @@
 #define MAPNIK_IMAGE_UTIL_HPP
 
 // mapnik
+#include <mapnik/box2d.hpp>
 #include <mapnik/config.hpp>
 #include <mapnik/pixel_types.hpp>
+#include <mapnik/projection.hpp>
+#include <mapnik/image_scaling.hpp>
 //#include <mapnik/image.hpp>
 //#include <mapnik/image_any.hpp>
 //#include <mapnik/image_view.hpp>
@@ -146,6 +149,17 @@ MAPNIK_DECL void set_alpha (image_any & image, float opacity);
 
 template <typename T>
 MAPNIK_DECL void set_alpha (T & image, float opacity);
+
+// RESCALE
+MAPNIK_DECL void rescale (image_any const& src_img, image_any & dest_img,
+                          scaling_method_e scaling_method,
+                          box2d<double> const& src_bounds, projection const& src_proj,
+                          box2d<double> const& dest_bounds, projection const& dest_proj);
+
+template <typename T>
+MAPNIK_DECL void rescale (T const& src_img, T & dest_img, scaling_method_e scaling_method,
+                          box2d<double> const& src_bounds, projection const& src_proj,
+                          box2d<double> const& dest_bounds, projection const& dest_proj);
 
 // SET GRAYSCALE TO ALPHA
 MAPNIK_DECL void set_grayscale_to_alpha (image_any & image);
